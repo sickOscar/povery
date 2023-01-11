@@ -1,0 +1,46 @@
+import {handler} from "./lambda/$$$_FUNCTION_NAME_$$$/index";
+
+let eventBody;
+const type = "$$$_TYPE_$$$";
+const eventPath = "$$$_EVENT_PATH_$$$";
+
+if (eventPath) {
+    eventBody = require(eventPath);
+} else {
+    eventBody = $$$_EVENT_BODY_$$$;
+}
+
+const event = {
+    body: JSON.stringify(eventBody),
+    requestContext: {
+        authorizer: {
+            claims: $$$_CLAIMS_$$$,
+        }
+    }
+};
+
+const launchEvent = type === "web" ? event : JSON.parse(event.body);
+
+const context = {
+    invokedFunctionArn: "******:dev",
+    fail: (data) => {
+        console.error("FAIL", data);
+    },
+    succeed: (data) => {
+        console.log("SUCCESS", data);
+    },
+};
+
+handler(launchEvent, context)
+    .then(data => {
+        console.log("*********************************");
+        console.log("SUCCESS", data);
+        process.exit(0);
+    })
+    .catch(err => {
+        console.log("*********************************");
+        console.error("FAIL", err);
+        process.exit(0);
+    });
+
+
