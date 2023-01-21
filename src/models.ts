@@ -25,6 +25,7 @@ export type Context = LambdaInvocationContext & {
 }
 export type APIGatewayEvent = APIGatewayEventRequestContextWithAuthorizer<any> & {
     body: string;
+    requestContext: any;
 };
 
 export type S3Event = LambdaS3Event;

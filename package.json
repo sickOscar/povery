@@ -1,12 +1,11 @@
 {
   "name": "povery",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "description": "Povery - a Lambda Framework",
   "scripts": {
     "test": "NODE_ENV=development jest",
     "build": "rimraf ./dist && tsc --project tsconfig.build.json --watch"
   },
-  "bin": "./cli.mjs",
   "main": "./dist/main.js",
   "author": "Oscar Chinellato",
   "license": "MIT",
@@ -19,24 +18,8 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "ts-node": "^10.9.1",
-    "tunnel-ssh": "^4.1.6",
-    "yarn": "^1.22.19",
-    "rimraf": "^3.0.2",
-    "ora": "^6.1.2",
-    "fs-extra": "^10.1.0",
-    "inquirer": "^9.0.0",
-    "adm-zip": "^0.5.9",
     "aws-lambda": "^1.0.7",
-    "chalk": "^5.0.1",
-    "commander": "^9.3.0",
-    "@types/serverless": "^3.12.9",
     "@types/aws-lambda": "^8.10.109",
-    "@types/fs-extra": "^9.0.13",
-    "serverless": "^3.20.0",
-    "serverless-offline": "^12.0.3",
-    "serverless-plugin-typescript": "^2.1.2",
-    "dotenv": "^16.0.3",
     "@sentry/node": "^7.7.0",
     "aws-sdk": "^2.1173.0",
     "aws-xray-sdk": "^3.3.6",
@@ -48,7 +31,6 @@
     "path-to-regexp": "^6.2.1",
     "pg": "^8.7.3",
     "reflect-metadata": "^0.1.13",
-    "xlsx": "^0.18.5",
     "xss": "^1.0.13"
   }
 }

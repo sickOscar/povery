@@ -169,7 +169,8 @@ function applyControllerValidator(controller, event) {
 }
 
 function validateInputs(event, controller) {
-    const controllerMethods = Object.getOwnPropertyNames(controller);
+    const parent = Object.getPrototypeOf(controller);
+    const controllerMethods = Object.getOwnPropertyNames(parent.prototype);
 
     const {action} = getRPCActionAndPayload(event);
 
