@@ -3,7 +3,6 @@ import {Subsegment} from 'aws-xray-sdk';
 import * as _ from 'lodash';
 import xss from 'xss';
 import {runAuthorization} from './auth';
-import {DB} from './db';
 import {ExecutionContext} from './execution_context';
 import * as util from './util';
 import {endTimer, endXRayTracing, startTimer, startXRayTracing} from './util';
@@ -13,11 +12,31 @@ import {getRoute} from "./route_extractor";
 
 const Validator = require('jsonschema').Validator;
 
-function poveryFn() {}
+type PoveryMiddlewareFn = (event, context) => void;
+
+interface PoveryMiddlewareObject {
+    setup?: (event, context) => void;
+    tearDown?: () => void;
+}
+
+export type PoveryMiddleware = PoveryMiddlewareFn | PoveryMiddlewareObject;
+
+interface PoveryFn {
+    middlewares: PoveryMiddleware[];
+    load: (controller) => (event: any, context: any) => Promise<any>;
+    clean: () => void;
+    withAuth: () => PoveryFn;
+    forAwsEvent: () => PoveryFn;
+    use: (middleware) => PoveryFn;
+}
+
+const poveryFn:PoveryFn = function() {
+} as unknown as PoveryFn;
 
 poveryFn.load = function(controller): (event: any, context: any) => Promise<any> {
     return async (event: any, context: any) => {
-        const subsegment = setup(context, event);
+
+        const subsegment = setup(context, event, this.middlewares || []);
 
         const functionResults = await runNewExecutionContext(async () => {
             const startTime = startTimer();
@@ -44,7 +63,7 @@ poveryFn.load = function(controller): (event: any, context: any) => Promise<any>
 
         });
 
-        await tearDown(subsegment);
+        await tearDown(subsegment, this.middlewares || []);
 
         return functionResults;
     }
@@ -55,6 +74,8 @@ poveryFn.clean = function() {
     this.auth = false;
     // @ts-ignore
     this.awsEvent = false;
+    // @ts-ignore
+    this.middlewares = [];
 }
 
 poveryFn.withAuth = function() {
@@ -66,6 +87,17 @@ poveryFn.withAuth = function() {
 poveryFn.forAwsEvent = function() {
     // @ts-ignore
     this.awsEvent = true;
+    return this;
+}
+
+poveryFn.use = function(middleware) {
+
+    if (!this.middlewares) {
+        // @ts-ignore
+        this.middlewares = [];
+    }
+
+    this.middlewares.push(middleware);
     return this;
 }
 
@@ -95,28 +127,30 @@ async function handleExecutionError(err: any, event): Promise<BaseHTTPResponse |
     };
 }
 
-function setup(context, event) {
+function setup(context, event, middlewares) {
     const subsegment = startXRayTracing('povery.load');
 
     setupStage(context);
-
-    // setupSentry(context);
-
-    setupDb(context);
-
     logEnvironment(event);
+
+    middlewares.forEach((middleware) => {
+        if (typeof middleware === 'function') {
+            middleware(event, context);
+        } else {
+            middleware.setup(event, context);
+        }
+    })
 
     return subsegment;
 }
 
-function setupDb(_context) {
-    DB.init();
-}
-
-async function tearDown(subsegment: undefined | Subsegment) {
-    // await destroyPostgresClient();
+async function tearDown(subsegment: undefined | Subsegment, middlewares) {
     endXRayTracing(subsegment);
-    await DB.tearDown();
+    middlewares.forEach((middleware) => {
+        if (typeof middleware !== 'function') {
+            middleware.tearDown();
+        }
+    });
 }
 
 function logEnvironment(event) {

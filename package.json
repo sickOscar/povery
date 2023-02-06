@@ -1,6 +1,6 @@
 {
   "name": "povery",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "Povery - a Lambda Framework",
   "scripts": {
     "test": "NODE_ENV=development jest",
@@ -20,16 +20,13 @@
   "dependencies": {
     "aws-lambda": "^1.0.7",
     "@types/aws-lambda": "^8.10.109",
-    "@sentry/node": "^7.7.0",
     "aws-sdk": "^2.1173.0",
     "aws-xray-sdk": "^3.3.6",
     "date-fns": "^2.29.3",
     "joi": "^17.6.0",
     "jsonschema": "^1.4.1",
-    "knex": "^2.1.0",
     "lodash": "^4.17.21",
     "path-to-regexp": "^6.2.1",
-    "pg": "^8.7.3",
     "reflect-metadata": "^0.1.13",
     "xss": "^1.0.13"
   }
