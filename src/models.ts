@@ -28,4 +28,13 @@ export type APIGatewayEvent = APIGatewayEventRequestContextWithAuthorizer<any> &
     requestContext: any;
 };
 
+export type PoveryMiddlewareFn = (event, context) => void;
+
+export interface PoveryMiddlewareObject {
+    setup?: (event, context) => void;
+    teardown?: () => void;
+}
+
+export type PoveryMiddleware = PoveryMiddlewareFn | PoveryMiddlewareObject;
+
 export type S3Event = LambdaS3Event;

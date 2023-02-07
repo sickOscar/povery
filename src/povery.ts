@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/node';
 import {Subsegment} from 'aws-xray-sdk';
 import * as _ from 'lodash';
 import xss from 'xss';
@@ -7,19 +6,10 @@ import {ExecutionContext} from './execution_context';
 import * as util from './util';
 import {endTimer, endXRayTracing, startTimer, startXRayTracing} from './util';
 import assert from "assert";
-import {BaseHTTPResponse, ErrorContent} from "./models";
+import {BaseHTTPResponse, ErrorContent, PoveryMiddleware} from "./models";
 import {getRoute} from "./route_extractor";
 
 const Validator = require('jsonschema').Validator;
-
-type PoveryMiddlewareFn = (event, context) => void;
-
-interface PoveryMiddlewareObject {
-    setup?: (event, context) => void;
-    tearDown?: () => void;
-}
-
-export type PoveryMiddleware = PoveryMiddlewareFn | PoveryMiddlewareObject;
 
 interface PoveryFn {
     middlewares: PoveryMiddleware[];
@@ -63,7 +53,7 @@ poveryFn.load = function(controller): (event: any, context: any) => Promise<any>
 
         });
 
-        await tearDown(subsegment, this.middlewares || []);
+        await teardown(subsegment, this.middlewares || []);
 
         return functionResults;
     }
@@ -111,7 +101,6 @@ function enhanceContextForAwsEvent(context, _event, _controller) {
 }
 
 async function handleExecutionError(err: any, event): Promise<BaseHTTPResponse | ErrorContent> {
-    // await sendErrorToSentry(err);
     logError(err);
     const cleanedError = cleanError(err);
 
@@ -144,11 +133,11 @@ function setup(context, event, middlewares) {
     return subsegment;
 }
 
-async function tearDown(subsegment: undefined | Subsegment, middlewares) {
+async function teardown(subsegment: undefined | Subsegment, middlewares) {
     endXRayTracing(subsegment);
     middlewares.forEach((middleware) => {
-        if (typeof middleware !== 'function') {
-            middleware.tearDown();
+        if (typeof middleware !== 'function' && middleware.teardown) {
+            middleware.teardown();
         }
     });
 }
@@ -219,20 +208,7 @@ function validateInputs(event, controller) {
     return checkXss(event);
 }
 
-function setupSentry(context) {
-    Sentry.init({
-        dsn: '',
-        environment: process.env.deploymentStage,
-        beforeSend: (event) => {
-            // non mandare errori in dev / local
-            return util.isDevelopment() ? null : event;
-        },
-    });
 
-    Sentry.configureScope(function (scope) {
-        scope.setTag('arn', context.invokedFunctionArn);
-    });
-}
 
 function setupStage(_context) {
     const allowedStages = ['prod', 'staging'];
@@ -257,11 +233,6 @@ function runFunction(event, context, controller): Promise<any> {
 
 function logError(err: any) {
     console.log(err && err.stack ? err.stack : err);
-}
-
-async function sendErrorToSentry(err: any) {
-    Sentry.captureException(err);
-    await Sentry.flush(1000);
 }
 
 function cleanError(err: any): ErrorContent {
