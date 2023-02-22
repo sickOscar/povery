@@ -31,8 +31,8 @@ export type APIGatewayEvent = APIGatewayEventRequestContextWithAuthorizer<any> &
 export type PoveryMiddlewareFn = (event, context) => void;
 
 export interface PoveryMiddlewareObject {
-    setup?: (event, context) => void;
-    teardown?: () => void;
+    setup?: (event, context) => Promise<void> | void;
+    teardown?: () => Promise<void> | void;
 }
 
 export type PoveryMiddleware = PoveryMiddlewareFn | PoveryMiddlewareObject;

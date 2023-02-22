@@ -1,10 +1,26 @@
 import {ExecutionContext} from "./execution_context";
 import assert from "assert";
-import {endXRayTracing, startXRayTracing} from "./util";
+import {endTimer, endXRayTracing, startTimer, startXRayTracing} from "./util";
 import {isRPC} from "./povery";
 import {PoveryError} from "./povery_error";
 import {APIGatewayEventRequestContextWithAuthorizer} from "aws-lambda";
 import {getRoute} from "./route_extractor";
+import {PoveryMiddleware} from "./models";
+
+
+export const authMiddleware = (controller):PoveryMiddleware => {
+    return {
+        setup: async (event, context) => {
+            const startAuthTime = startTimer();
+            await runAuthorization(context, event, controller);
+            endTimer(startAuthTime, 'povery.auth');
+        },
+        teardown: async () => {
+
+        }
+    }
+
+}
 
 export async function runAuthorization(context, event, controller): Promise<any> {
 

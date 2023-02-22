@@ -1,7 +1,6 @@
 import {Subsegment} from 'aws-xray-sdk';
 import * as _ from 'lodash';
 import xss from 'xss';
-import {runAuthorization} from './auth';
 import {ExecutionContext} from './execution_context';
 import * as util from './util';
 import {endTimer, endXRayTracing, startTimer, startXRayTracing} from './util';
@@ -24,38 +23,25 @@ const poveryFn:PoveryFn = function() {
 } as unknown as PoveryFn;
 
 poveryFn.load = function(controller): (event: any, context: any) => Promise<any> {
+
+    // DO NOT SHORTEN
     return async (event: any, context: any) => {
+        return runNewExecutionContext(async () => {
 
-        const subsegment = setup(context, event, this.middlewares || []);
-
-        const functionResults = await runNewExecutionContext(async () => {
+            let xRaySegment: Subsegment | undefined;
             const startTime = startTimer();
+
             try {
-
-                // @ts-ignore
-                if (this.auth) {
-                    const startAuthTime = startTimer();
-                    context = await runAuthorization(context, event, controller);
-                    endTimer(startAuthTime, 'povery.auth');
-                }
-
-                // @ts-ignore
-                if (this.awsEvent) {
-                    context = await enhanceContextForAwsEvent(context, event, controller);
-                }
-
+                xRaySegment = await setup(context, event, this.middlewares || []);
                 return await runFunction(event, context, controller);
             } catch (err: any) {
                 return await handleExecutionError(err, event);
             } finally {
+                await teardown(xRaySegment, this.middlewares || []);
                 endTimer(startTime, 'povery.load');
             }
 
         });
-
-        await teardown(subsegment, this.middlewares || []);
-
-        return functionResults;
     }
 }
 
@@ -66,18 +52,6 @@ poveryFn.clean = function() {
     this.awsEvent = false;
     // @ts-ignore
     this.middlewares = [];
-}
-
-poveryFn.withAuth = function() {
-    // @ts-ignore
-    this.auth = true;
-    return this;
-}
-
-poveryFn.forAwsEvent = function() {
-    // @ts-ignore
-    this.awsEvent = true;
-    return this;
 }
 
 poveryFn.use = function(middleware) {
@@ -91,7 +65,13 @@ poveryFn.use = function(middleware) {
     return this;
 }
 
-
+export function forEvent<EventType>() {
+    return {
+        setup: async (event, context) => {
+            context.isEvent = true;
+        }
+    }
+}
 
 function enhanceContextForAwsEvent(context, _event, _controller) {
     return {
@@ -116,30 +96,30 @@ async function handleExecutionError(err: any, event): Promise<BaseHTTPResponse |
     };
 }
 
-function setup(context, event, middlewares) {
+async function setup(context, event, middlewares):Promise<Subsegment | undefined> {
     const subsegment = startXRayTracing('povery.load');
 
     setupStage(context);
     logEnvironment(event);
 
-    middlewares.forEach((middleware) => {
+    for (let middleware of middlewares) {
         if (typeof middleware === 'function') {
-            middleware(event, context);
+            await middleware(event, context);
         } else {
-            middleware.setup(event, context);
+            await middleware.setup(event, context);
         }
-    })
+    }
 
     return subsegment;
 }
 
 async function teardown(subsegment: undefined | Subsegment, middlewares) {
     endXRayTracing(subsegment);
-    middlewares.forEach((middleware) => {
+    for (let middleware of middlewares) {
         if (typeof middleware !== 'function' && middleware.teardown) {
-            middleware.teardown();
+            await middleware.teardown();
         }
-    });
+    }
 }
 
 function logEnvironment(event) {
