@@ -13,6 +13,7 @@ export interface BaseHTTPResponse {
 
 export interface ErrorContent {
     errorMessage: string;
+    errorData: any;
 }
 
 export interface MatchingRoute {
