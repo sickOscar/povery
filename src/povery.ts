@@ -247,10 +247,9 @@ function cleanError(err: any): ErrorContent {
 
     return {
         errorMessage: error,
+        errorData: err.errorData ? err.errorData : undefined,
     };
 
-    // hack for serverless local run, emulate lambda_proxy integration
-    // return localDevelopmentHacksOnTheError(content);
 }
 
 function getRPCActionAndPayload(event) {
