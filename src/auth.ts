@@ -8,7 +8,7 @@ import {getRoute} from "./route_extractor";
 import {PoveryMiddleware, PoveryUser} from "./models";
 
 
-export const authMiddleware = (controller):PoveryMiddleware => {
+export const authMiddleware = (controller): PoveryMiddleware => {
     return {
         setup: async (event, context) => {
             const startAuthTime = startTimer();
@@ -23,8 +23,6 @@ export const authMiddleware = (controller):PoveryMiddleware => {
 }
 
 export async function runAuthorization(context, event, controller): Promise<any> {
-    
-    console.log(`AUHHHHH`)
 
     const authSegment = startXRayTracing("povery.authorization");
 
@@ -49,17 +47,13 @@ export async function runAuthorization(context, event, controller): Promise<any>
 
 }
 
-function checkRestAcl(controller, controllerMethod:string, roles:string[]) {
-    
-    console.log(`controller.__ACL__`, controller.__ACL__)
-    
+function checkRestAcl(controller, controllerMethod: string, roles: string[]) {
+
     // let it go if no ACL is defined
     if (!controller.__ACL__ || !controller.__ACL__[controllerMethod]) {
         return;
     }
-    
-    console.log(`roles`, roles)
-    
+
     // check if the user has at least one of the roles required
     for (const role of roles) {
         if (controller.__ACL__[controllerMethod].indexOf(role) !== -1) {
@@ -75,26 +69,22 @@ function validateAuthorizerContent(requestContext) {
     assert(claims, "Bootloader - No claims found");
 }
 
-function loadCognitoIdentityInRequestContext(requestContext:APIGatewayEventRequestContextWithAuthorizer<any>):void {
+function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequestContextWithAuthorizer<any>): void {
 
     validateAuthorizerContent(requestContext);
 
     const claims = requestContext.authorizer.claims;
-    
-    console.log(`claims`, claims)
 
-    ExecutionContext.set(`user`, {
-        ...claims
-    })
+    ExecutionContext.set(`user`, {...claims})
     ExecutionContext.set(`roles`, claims['cognito:groups'] || [])
 
 }
 
 export const Auth = {
-    getUser: function():PoveryUser {
+    getUser: function (): PoveryUser {
         return ExecutionContext.get('user');
     },
-    getRoles: function():string[] {
+    getRoles: function (): string[] {
         return ExecutionContext.get('roles');
     }
 }
