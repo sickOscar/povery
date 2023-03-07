@@ -1,5 +1,9 @@
-import {APIGatewayEventRequestContextWithAuthorizer, Context as LambdaInvocationContext} from "aws-lambda";
-import {S3Event as LambdaS3Event} from "aws-lambda";
+import {
+    APIGatewayEventRequestContextWithAuthorizer,
+    Context as LambdaInvocationContext,
+    S3Event as LambdaS3Event
+} from "aws-lambda";
+
 export interface BaseHTTPResponse {
     headers: {
         'Access-Control-Allow-Origin': string;
@@ -19,6 +23,12 @@ export interface ErrorContent {
 export interface MatchingRoute {
     controllerMethod: string;
     params: any;
+}
+
+export interface PoveryUser {
+    sub: string;
+    username: string;
+    [key:string]: string | number | string[]
 }
 
 export type Context = LambdaInvocationContext & {

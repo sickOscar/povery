@@ -5,7 +5,7 @@ import {isRPC} from "./povery";
 import {PoveryError} from "./povery_error";
 import {APIGatewayEventRequestContextWithAuthorizer} from "aws-lambda";
 import {getRoute} from "./route_extractor";
-import {PoveryMiddleware} from "./models";
+import {PoveryMiddleware, PoveryUser} from "./models";
 
 
 export const authMiddleware = (controller):PoveryMiddleware => {
@@ -23,15 +23,14 @@ export const authMiddleware = (controller):PoveryMiddleware => {
 }
 
 export async function runAuthorization(context, event, controller): Promise<any> {
+    
+    console.log(`AUHHHHH`)
 
     const authSegment = startXRayTracing("povery.authorization");
 
     assert(event.requestContext, "No requestContext found");
 
-    const identity = await loadCognitoIdentityInRequestContext(event.requestContext);
-
-    context.identityData = identity;
-    context.customer = identity.customer;
+    loadCognitoIdentityInRequestContext(event.requestContext);
 
     if (isRPC(event, context)) {
         // do nothing at the moment, no ACL on RPC
@@ -40,7 +39,7 @@ export async function runAuthorization(context, event, controller): Promise<any>
         // to be able to define a static property on the controller class
         new controller();
         const route = getRoute(controller, event.httpMethod, event.path);
-        checkRestAcl(controller, route.controllerMethod, identity.role);
+        checkRestAcl(controller, route.controllerMethod, Auth.getRoles());
     }
 
     ExecutionContext.set('authDone', true);
@@ -50,14 +49,24 @@ export async function runAuthorization(context, event, controller): Promise<any>
 
 }
 
-function checkRestAcl(controller, controllerMethod:string, role:string) {
+function checkRestAcl(controller, controllerMethod:string, roles:string[]) {
+    
+    console.log(`controller.__ACL__`, controller.__ACL__)
+    
     // let it go if no ACL is defined
     if (!controller.__ACL__ || !controller.__ACL__[controllerMethod]) {
         return;
     }
-    if (controller.__ACL__[controllerMethod].indexOf(role) === -1) {
-        throw new PoveryError("Unauthorized access (REST)", 403);
+    
+    console.log(`roles`, roles)
+    
+    // check if the user has at least one of the roles required
+    for (const role of roles) {
+        if (controller.__ACL__[controllerMethod].indexOf(role) !== -1) {
+            return;
+        }
     }
+    throw new PoveryError("Unauthorized access (REST)", 403);
 }
 
 function validateAuthorizerContent(requestContext) {
@@ -66,25 +75,26 @@ function validateAuthorizerContent(requestContext) {
     assert(claims, "Bootloader - No claims found");
 }
 
-async function loadCognitoIdentityInRequestContext(requestContext:APIGatewayEventRequestContextWithAuthorizer<any>) {
+function loadCognitoIdentityInRequestContext(requestContext:APIGatewayEventRequestContextWithAuthorizer<any>):void {
 
     validateAuthorizerContent(requestContext);
 
     const claims = requestContext.authorizer.claims;
+    
+    console.log(`claims`, claims)
 
-    ExecutionContext.set('customer', claims['custom:customer']);
-    ExecutionContext.set('user', {
-        username: claims['cognito:username'],
-        sub: claims.sub,
-        customer: claims['custom:customer'],
-        email: claims.email,
-        role: claims['custom:role']
+    ExecutionContext.set(`user`, {
+        ...claims
     })
+    ExecutionContext.set(`roles`, claims['cognito:groups'] || [])
 
+}
 
-    return {
-        customer: claims['custom:customer'],
-        role: claims['custom:role']
+export const Auth = {
+    getUser: function():PoveryUser {
+        return ExecutionContext.get('user');
+    },
+    getRoles: function():string[] {
+        return ExecutionContext.get('roles');
     }
-
 }

@@ -71,13 +71,15 @@ exports.handler = povery.forAwsEvent.load(handler);
 
 ### JWT Authorization
 
-Povery supports JWT authorization. Authentication must be done on APi Gateway, and the token must be passed to the lambda as a header.
+Povery supports JWT authorization. Authentication must be done on API Gateway.
 
+Povery exposes a middleware named `Authorizer` that can be used to extract user information into request context and to apply ACL.
 
-Using withAuth, povery checks for `custom:role` claims and matches it with the roles you pass to the decorator.
 
 ```typescript
 // index.ts
+import {povery, controller, api, Authorizer, acl} from 'povery';
+
 @controller
 class Service {
 
@@ -85,11 +87,13 @@ class Service {
     @api('GET', /hello')
     @acl(['ADMIN'])
     hello() {
+        const user = Auth.getUser();
+        const roles = Auth.getRoles();
         return 'hello world'
     }
 }
 
-exports.handler = povery.withAuth().load(Service);
+exports.handler = povery.use(Authorizer(Service)).load(Service);
 ```
 
-See "Autorization" section in `povery.json` for more details.
+By default, povery reads roles from Cognito Groups.
