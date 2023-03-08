@@ -7,12 +7,22 @@ import {APIGatewayEventRequestContextWithAuthorizer} from "aws-lambda";
 import {getRoute} from "./route_extractor";
 import {PoveryMiddleware, PoveryUser} from "./models";
 
+interface AuthorizerOptions {
+    // if this is set, the role of  the user will be taken from this claim and the groups
+    // won't be considered
+    roleClaim?: string;
+}
 
-export const authMiddleware = (controller): PoveryMiddleware => {
+export const authMiddleware = (controller:any, options?:AuthorizerOptions): PoveryMiddleware => {
+
+    const authOptions:AuthorizerOptions = {
+        ...options
+    }
+
     return {
         setup: async (event, context) => {
             const startAuthTime = startTimer();
-            await runAuthorization(context, event, controller);
+            await runAuthorization(context, event, controller, authOptions);
             endTimer(startAuthTime, 'povery.auth');
         },
         teardown: async () => {
@@ -22,13 +32,13 @@ export const authMiddleware = (controller): PoveryMiddleware => {
 
 }
 
-export async function runAuthorization(context, event, controller): Promise<any> {
+export async function runAuthorization(context, event, controller, options:AuthorizerOptions): Promise<any> {
 
     const authSegment = startXRayTracing("povery.authorization");
 
     assert(event.requestContext, "No requestContext found");
 
-    loadCognitoIdentityInRequestContext(event.requestContext);
+    loadCognitoIdentityInRequestContext(event.requestContext, options);
 
     if (isRPC(event, context)) {
         // do nothing at the moment, no ACL on RPC
@@ -69,14 +79,19 @@ function validateAuthorizerContent(requestContext) {
     assert(claims, "Bootloader - No claims found");
 }
 
-function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequestContextWithAuthorizer<any>): void {
+function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequestContextWithAuthorizer<any>, options:AuthorizerOptions): void {
 
     validateAuthorizerContent(requestContext);
 
     const claims = requestContext.authorizer.claims;
 
     ExecutionContext.set(`user`, {...claims})
-    ExecutionContext.set(`roles`, claims['cognito:groups'] || [])
+
+    if (options.roleClaim) {
+        ExecutionContext.set(`roles`, [claims[options.roleClaim]])
+    } else {
+        ExecutionContext.set(`roles`, claims['cognito:groups'] || [])
+    }
 
 }
 

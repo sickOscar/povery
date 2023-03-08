@@ -81,7 +81,7 @@ Povery exposes a middleware named `Authorizer` that can be used to extract user 
 import {povery, controller, api, Authorizer, acl} from 'povery';
 
 @controller
-class Service {
+class Controller {
 
     // only admin can access
     @api('GET', /hello')
@@ -93,7 +93,13 @@ class Service {
     }
 }
 
-exports.handler = povery.use(Authorizer(Service)).load(Service);
+exports.handler = povery.use(Authorizer(Controller)).load(Service);
 ```
 
-By default, povery reads roles from Cognito Groups.
+By default, povery reads roles from Cognito Groups. If your user role is set on a user pool attribute, you can use the `Authorizer` middleware like this:
+
+```typescript
+exports.handler = povery.use(Authorizer(Controller, {
+    roleClaim: "custom:role"
+})).load(Service);
+```
