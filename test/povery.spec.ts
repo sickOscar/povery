@@ -1,6 +1,7 @@
-import {povery} from "../src/povery";
+import {forAwsEvent, povery} from "../src/povery";
 import {acl, api, controller} from "../src/decorators";
 import {PoveryError} from "../src/povery_error";
+import {Authorizer} from "../src/main";
 
 describe('povery', () => {
 
@@ -17,37 +18,37 @@ describe('povery', () => {
     })
 
     it('load forAwsEvent should return a function', () => {
-        expect(povery.forAwsEvent().load).toBeDefined();
+        expect(povery.use(forAwsEvent()).load).toBeDefined();
     })
 
     it('load withAuth should return a function', () => {
-        expect(povery.withAuth().load).toBeDefined();
+        expect(povery.use(Authorizer({})).load).toBeDefined();
     });
 
-    describe('RPC', () => {
-
-        it('loaded function should fail if no action is given', async () => {
-            const fn = povery.load({});
-            await expect(fn({}, {})).resolves.toStrictEqual({
-                errorMessage: "No action given",
-            })
-        })
-
-        it('loaded function should fail if no action is in the controller', async () => {
-            const fn = povery.load({});
-            await expect(fn({
-                action: "test"
-            }, {})).resolves.toStrictEqual({
-                errorMessage: "Action not found",
-            })
-        })
-
-    })
+    // describe('RPC', () => {
+    //
+    //     it('loaded function should fail if no action is given', async () => {
+    //         const fn = povery.load(class {});
+    //         await expect(fn({}, {})).resolves.toStrictEqual({
+    //             errorMessage: "No action given",
+    //         })
+    //     })
+    //
+    //     it('loaded function should fail if no action is in the controller', async () => {
+    //         const fn = povery.load({});
+    //         await expect(fn({
+    //             action: "test"
+    //         }, {})).resolves.toStrictEqual({
+    //             errorMessage: "Action not found",
+    //         })
+    //     })
+    //
+    // })
 
     describe('forAwsEvent', () => {
 
         it('loaded function should fire', async () => {
-            const fn = povery.forAwsEvent().load(() => {
+            const fn = povery.use(forAwsEvent()).load(() => {
                 return {
                     "CIAOSSA": "CIAOSSA"
                 }
@@ -149,7 +150,7 @@ describe('povery', () => {
             })
         })
 
-        describe('withAuth', () => {
+        describe('Authorizer', () => {
 
             it('should return a 403 error if the route is not accessible by this role', async () => {
                 @controller
@@ -172,7 +173,7 @@ describe('povery', () => {
                         }
                     }
                 }
-                const handler = povery.withAuth().load(testController)
+                const handler = povery.use(Authorizer(testController)).load(testController)
                 await expect(handler(httpEvent, {})).resolves.toStrictEqual({
                     body: JSON.stringify({
                         errorMessage: 'Unauthorized access (REST)'

@@ -15,7 +15,6 @@ interface PoveryFn {
     load: (controller) => (event: any, context: any) => Promise<any>;
     clean: () => void;
     withAuth: () => PoveryFn;
-    forAwsEvent: () => PoveryFn;
     use: (middleware) => PoveryFn;
 }
 
@@ -35,6 +34,7 @@ poveryFn.load = function(controller): (event: any, context: any) => Promise<any>
                 xRaySegment = await setup(context, event, this.middlewares || []);
                 return await runFunction(event, context, controller);
             } catch (err: any) {
+                console.log(`err`, err)
                 return await handleExecutionError(err, event);
             } finally {
                 await teardown(xRaySegment, this.middlewares || []);
@@ -65,19 +65,12 @@ poveryFn.use = function(middleware) {
     return this;
 }
 
-export function forEvent<EventType>() {
+export function forAwsEvent<EventType>() {
     return {
         setup: async (event, context) => {
-            context.isEvent = true;
+            context.isAwsEvent = true;
         }
     }
-}
-
-function enhanceContextForAwsEvent(context, _event, _controller) {
-    return {
-        ...context,
-        isAwsEvent: true,
-    };
 }
 
 async function handleExecutionError(err: any, event): Promise<BaseHTTPResponse | ErrorContent> {
@@ -171,9 +164,14 @@ function applyControllerValidator(controller, event) {
     }
 }
 
-function validateInputs(event, controller) {
-    const parent = Object.getPrototypeOf(controller);
-    const controllerMethods = Object.getOwnPropertyNames(parent.prototype);
+function validateInputs(event, controller:Function) {
+
+    const proto = Object.getPrototypeOf(controller);
+    debugger;
+
+    assert(proto.prototype, "Unable to get controller methods. Did you pass a class to povery.load?")
+
+    const controllerMethods = Object.getOwnPropertyNames(proto.prototype);
 
     const {action} = getRPCActionAndPayload(event);
 
@@ -245,7 +243,7 @@ function getRPCActionAndPayload(event) {
 }
 
 export function isRPC(event, context) {
-    if (isEvent(context)) {
+    if (isAwsEvent(context)) {
         return false;
     }
     return !event.httpMethod;
@@ -263,7 +261,7 @@ async function execFunctionHandler(controller, event, context): Promise<BaseHTTP
         let {action, payload} = getRPCActionAndPayload(event);
         result = await instance[action].call(controller, payload, context);
 
-    } else if (isEvent(context)) {
+    } else if (isAwsEvent(context)) {
 
         result = await controller.call(controller, event, context);
 
@@ -278,7 +276,7 @@ async function execFunctionHandler(controller, event, context): Promise<BaseHTTP
         endTimer(startExecution, "Controller exec time");
     }
 
-    if (isRPC(event, context) || isEvent(context)) {
+    if (isRPC(event, context) || isAwsEvent(context)) {
         return result
     }
 
@@ -298,7 +296,7 @@ function generateCorsHeaders() {
     };
 }
 
-function isEvent(context) {
+function isAwsEvent(context) {
     return context.isAwsEvent;
 }
 

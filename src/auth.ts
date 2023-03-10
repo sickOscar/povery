@@ -36,6 +36,13 @@ export async function runAuthorization(context, event, controller, options:Autho
 
     const authSegment = startXRayTracing("povery.authorization");
 
+    if (isRPC(event, context)) {
+        // do nothing at the moment, no ACL on RPC
+        endXRayTracing(authSegment);
+        return;
+    }
+
+
     assert(event.requestContext, "No requestContext found");
 
     loadCognitoIdentityInRequestContext(event.requestContext, options);
@@ -79,7 +86,7 @@ function validateAuthorizerContent(requestContext) {
     assert(claims, "Bootloader - No claims found");
 }
 
-function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequestContextWithAuthorizer<any>, options:AuthorizerOptions): void {
+function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequestContextWithAuthorizer<any>, options?:AuthorizerOptions): void {
 
     validateAuthorizerContent(requestContext);
 
@@ -87,7 +94,7 @@ function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequ
 
     ExecutionContext.set(`user`, {...claims})
 
-    if (options.roleClaim) {
+    if (options?.roleClaim) {
         ExecutionContext.set(`roles`, [claims[options.roleClaim]])
     } else {
         ExecutionContext.set(`roles`, claims['cognito:groups'] || [])
