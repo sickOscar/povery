@@ -97,7 +97,11 @@ function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequ
     if (options?.roleClaim) {
         ExecutionContext.set(`roles`, [claims[options.roleClaim]])
     } else {
-        ExecutionContext.set(`roles`, claims['cognito:groups'] || [])
+        if (typeof claims['cognito:groups'] === 'string') {
+            ExecutionContext.set(`roles`, claims['cognito:groups'].split(',') || [])
+        } else {
+            ExecutionContext.set(`roles`, claims['cognito:groups'] || [])
+        }
     }
 
 }

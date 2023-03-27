@@ -6,3 +6,4 @@ export {
     authMiddleware as Authorizer,
     Auth
 } from "./auth";
+export {startXRayTracing, endXRayTracing} from "./util";
