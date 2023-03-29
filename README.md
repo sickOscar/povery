@@ -103,3 +103,57 @@ exports.handler = povery.use(Authorizer(Controller, {
     roleClaim: "custom:role"
 })).load(Service);
 ```
+
+### Decorators
+Many decorators are available to fill and validate DTOs and they can be applied to the parameters of the API method.
+The validation logic is provided by `class-validator`. Available decorators are:
+* `@body()` with the following options:
+    ```typescript
+    {
+        transform?: (...args) => any, // the transform function used to transform the raw data to a DTO
+        validate?: boolean // we can instruct Povery to perform a validation on the DTO based on its class-validator decorators
+    }
+    ```
+* `@pathParam()` with the following options:
+    ```typescript
+    {
+        name: string; // the name of the parameter
+        transform?:  (...args) => any, // the transform function used to transform the raw value into an usable one
+        validators?: PropertyDecorator[]; // the validators to be used
+    }
+    ```
+* `@queryParam()` with the following options:
+    ```typescript
+    {
+        name: string; // the name of the parameter
+        transform?:  (...args) => any, // the transform function used to transform the raw value into an usable one
+        validators?: PropertyDecorator[]; // the validators to be used
+    }
+    ```
+* `@queryParams()` with the following options:
+    ```typescript
+    {
+        transform?: (...args) => any, // the transform function used to transform the raw data to a DTO
+        validate?: boolean // we can instruct Povery to perform a validation on the DTO based on its class-validator decorators
+    }
+    ```
+* `@autowiredParam()` which can be used to create custom decorators. A function with the following signature must be provided:
+    ```typescript
+    (...args) => any
+    ```
+  where `...args` is the array of the API method parameters and the returned value will be the one to which the resulting parameter will be set to.
+
+Here's an example:
+```typescript
+    @api('PATCH', '/user/:id')
+    async updateUser(
+        event: any,
+        context: any,
+        @pathParam({name: 'id', validators: [IsUUID('4')]}) id: string
+        @body({transform: (event: any) => UserDto.fromObject(event), validate: true}) userDto: UserDto,
+        @autowiredParam(() => 'Hi mom') customParameter: string,
+    ): Promise<ResponseDto<DeviceDto[]>> {
+        console.log(customParameter); // prints "Hi mom"
+        ...
+    }
+    ```
