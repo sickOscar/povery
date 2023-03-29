@@ -54,7 +54,7 @@ This code will respond to a proxied GET request on a route named `/hello`. The r
 will be automatically prepared following what API Gateway wants in return from an
 integration with a Lambda, producing the following output if tested from the AWC Console:
 
-```json
+```
 {
     headers: {},
     isBase64Encoded: false,
@@ -333,7 +333,7 @@ Here's an example:
 Since povery makes heavy use of decorators, your `tsconfig.json` file should have the following compiler
 options enabled:
 
-```json
+```
 {
     "compilerOptions": {
         ...
