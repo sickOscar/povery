@@ -1,6 +1,9 @@
 # IntelliJ IDEA
 .idea/
 *.iml
+*.swp
+*.swo
+*~
 
 dist
 

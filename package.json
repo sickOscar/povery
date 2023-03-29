@@ -6,8 +6,24 @@
     "test": "NODE_ENV=development jest",
     "build": "rimraf ./dist && tsc --project tsconfig.build.json --watch"
   },
+  "keywords": [
+    "lambda",
+    "framework",
+    "serverless",
+    "typescript"
+  ],
   "main": "./dist/main.js",
-  "author": "Oscar Chinellato",
+  "author": "Oscar Chinellato <oscarchine@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sickOscar/povery.git"
+  },
+  "bugs": {
+      "url": "https://giuthub.com/sickOscar/povery/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^28.1.8",
