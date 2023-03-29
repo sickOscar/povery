@@ -5,7 +5,7 @@
 
 It's heavily opinionated.
 
-Check out (povery-cli)[https://github.com/sickOscar/povery-cli] for a way to organize 
+Check out [povery-cli](https://github.com/sickOscar/povery-cli) for a way to organize 
 your application written with AWS Lambda.
 
 ## Install
