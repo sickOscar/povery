@@ -5,24 +5,14 @@
 
 It's heavily opinionated.
 
-You can serve many lambdas as an http server, or you can invoke them locally from the terminal. 
-
-Unlike other things like this, it does not want to create lamdas for you (just deploy them, if you wish)
-
-## Rules
-
-- Every lambda has a named folder under `lambda` folder. 
-- The entrypoint of the lambda MUST BE `index.ts` file.
-- Lambdas that serve API Gateway SHOULD BE prefixed with `API_` (e.g. `API_Something`) and start with a capital letter.
-- Lambdas that serve ant other events SHOULD BE prefixed with `EVENT_` (e.g. `EVENT_Something`) and start with a capital letter.
-- API Gateway MUST USE proxy integration to respond to api request.
+Check out (povery-cli)[https://github.com/sickOscar/povery-cli] for a way to organize 
+your application written with AWS Lambda.
 
 ## Install
 
 ```bash
 npm i povery
 ```
-
 
 ### Api Gateway 
 This is an example `index.ts` to respond to an API Gateway request:
