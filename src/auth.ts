@@ -25,9 +25,7 @@ export const authMiddleware = (controller:any, options?:AuthorizerOptions): Pove
             await runAuthorization(context, event, controller, authOptions);
             endTimer(startAuthTime, 'povery.auth');
         },
-        teardown: async () => {
-
-        }
+        teardown: (event, context, result) => result
     }
 
 }

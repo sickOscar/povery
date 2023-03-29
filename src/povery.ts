@@ -29,18 +29,21 @@ poveryFn.load = function(controller): (event: any, context: any) => Promise<any>
 
             let xRaySegment: Subsegment | undefined;
             const startTime = startTimer();
-
+            let err = null;
+            let executionResult;
+            let result;
             try {
                 xRaySegment = await setup(context, event, this.middlewares || []);
-                return await runFunction(event, context, controller);
-            } catch (err: any) {
-                console.log(`err`, err)
-                return await handleExecutionError(err, event);
+                executionResult = await runFunction(event, context, controller);
+            } catch (e: any) {
+                console.log(`err`, e)
+                err = e;
+                executionResult = await handleExecutionError(e, event);
             } finally {
-                await teardown(xRaySegment, this.middlewares || []);
+                result = await teardown(xRaySegment, this.middlewares || [], context, event, executionResult, err);
                 endTimer(startTime, 'povery.load');
             }
-
+            return result;
         });
     }
 }
@@ -98,7 +101,7 @@ async function setup(context, event, middlewares):Promise<Subsegment | undefined
     for (let middleware of middlewares) {
         if (typeof middleware === 'function') {
             await middleware(event, context);
-        } else {
+        } else if (middleware.setup) {
             await middleware.setup(event, context);
         }
     }
@@ -106,13 +109,26 @@ async function setup(context, event, middlewares):Promise<Subsegment | undefined
     return subsegment;
 }
 
-async function teardown(subsegment: undefined | Subsegment, middlewares) {
+async function teardown(subsegment: undefined | Subsegment, middlewares, context, event, result, err) {
     endXRayTracing(subsegment);
+    let finalResult = result;
     for (let middleware of middlewares) {
         if (typeof middleware !== 'function' && middleware.teardown) {
-            await middleware.teardown();
+            const teardownResult = await middleware.teardown(context, event, finalResult, err);
+            // Backwards compatibility:
+            // Applications that use previous versions of this framework may not be up to date
+            // and may treat the teardown logic as a function that returns void.
+            // in that case we just return the executionResult.
+            //
+            // Keep in mind that if the teardown logic willingly returns an undefined object we ignore that result
+            // and return the executionResult instead. Maybe that's what it deserves if it returns an undefined value.
+            // null objects are perfectly fine though.
+            if (teardownResult !== undefined) {
+                finalResult = teardownResult;
+            }
         }
     }
+    return finalResult;
 }
 
 function logEnvironment(event) {
@@ -257,7 +273,7 @@ async function execFunctionHandler(controller, event, context): Promise<BaseHTTP
     if (isRPC(event, context)) {
 
         const instance = new controller();
-        // with RPC calls, only the payload matters fr the execution, not the entire event
+        // with RPC calls, only the payload matters for the execution, not the entire event
         let {action, payload} = getRPCActionAndPayload(event);
         result = await instance[action].call(controller, payload, context);
 

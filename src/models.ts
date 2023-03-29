@@ -39,11 +39,18 @@ export type APIGatewayEvent = APIGatewayEventRequestContextWithAuthorizer<any> &
     requestContext: any;
 };
 
+export interface PoveryResult {
+    headers: {[key: string]: string};
+    isBase64Encoded: boolean;
+    statusCode: number;
+    body: string;
+}
+
 export type PoveryMiddlewareFn = (event, context) => void;
 
 export interface PoveryMiddlewareObject {
     setup?: (event, context) => Promise<void> | void;
-    teardown?: () => Promise<void> | void;
+    teardown?: (event, context, result, err) => Promise<PoveryResult> | PoveryResult;
 }
 
 export type PoveryMiddleware = PoveryMiddlewareFn | PoveryMiddlewareObject;
