@@ -114,7 +114,7 @@ async function teardown(subsegment: undefined | Subsegment, middlewares, context
     let finalResult = result;
     for (let middleware of middlewares) {
         if (typeof middleware !== 'function' && middleware.teardown) {
-            const teardownResult = await middleware.teardown(context, event, finalResult, err);
+            const teardownResult = await middleware.teardown(event, context, finalResult, err);
             // Backwards compatibility:
             // Applications that use previous versions of this framework may not be up to date
             // and may treat the teardown logic as a function that returns void.
