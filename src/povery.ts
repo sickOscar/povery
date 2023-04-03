@@ -141,9 +141,13 @@ function logEnvironment(event) {
     }
 }
 
-function runNewExecutionContext(fn) {
+export function runNewExecutionContext(fn, defaultContext = null) {
     const requestContext = ExecutionContext.getExecutionContext();
-    return requestContext.run(new Map(), fn);
+    if (defaultContext) {
+        return requestContext.run(defaultContext, fn);
+    } else {
+        return requestContext.run(new Map(), fn);
+    }
 }
 
 function checkXss(event) {
