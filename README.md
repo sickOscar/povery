@@ -345,9 +345,9 @@ options enabled:
 ``` 
 ## Testing
 
-To test code developed with povery, you need to sorroundthe execution of very test with an `ExecutionContext`. To do so, 
-povery exposes the funtion "withContext". You can use it to setup the environment on 
-which your code runs.
+To test code developed with povery, you need to sorround the execution of every test with an `ExecutionContext`. To do so, 
+povery exposes the funtion "withContext". This is the content of the execution you usually reach by calling `get` 
+methon on `ExecutionContext`.
 
 Here's an example of how to use it:
 
