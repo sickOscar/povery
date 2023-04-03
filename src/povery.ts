@@ -141,7 +141,7 @@ function logEnvironment(event) {
     }
 }
 
-export function runNewExecutionContext(fn, defaultContext = null) {
+export function runNewExecutionContext(fn, defaultContext: null | Map<string, any> = null) {
     const requestContext = ExecutionContext.getExecutionContext();
     if (defaultContext) {
         return requestContext.run(defaultContext, fn);

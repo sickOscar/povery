@@ -343,6 +343,33 @@ options enabled:
     }
 }
 ``` 
+## Testing
+
+To test code developed with povery, you need to sorroundthe execution of very test with an `ExecutionContext`. To do so, 
+povery exposes the funtion "withContext". You can use it to setup the environment on 
+which your code runs.
+
+Here's an example of how to use it:
+
+```typescript
+describe('Unit to test', () => {
+
+    it ('should do something', withContext(
+        {
+            user: {
+                "email": "test@email.com"
+            {
+        },
+        async () => {
+            // do your testing here
+        }
+    )
+
+});
+
+
+```
+
 
 ## Contributing
 Feel free to open issues and pull requests.
