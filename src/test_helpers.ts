@@ -6,6 +6,8 @@ function setContext(map:{[key:string]:any}) {
 }
 
 export function withContext(context, fn) {
-    return () => runNewExecutionContext(fn, setContext(context))
+    return () => {
+        runNewExecutionContext(fn, setContext(context))
+    }
 }
 
