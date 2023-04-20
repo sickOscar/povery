@@ -50,7 +50,7 @@ export type PoveryMiddlewareFn = (event, context) => void;
 
 export interface PoveryMiddlewareObject {
     setup?: (event, context) => Promise<void> | void;
-    teardown?: (event, context, result, err) => Promise<PoveryResult> | PoveryResult;
+    teardown?: (event, context, result, err) => Promise<PoveryResult> | PoveryResult | Promise<void> | void;
 }
 
 export type PoveryMiddleware = PoveryMiddlewareFn | PoveryMiddlewareObject;

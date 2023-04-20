@@ -112,16 +112,12 @@ async function setup(context, event, middlewares):Promise<Subsegment | undefined
 async function teardown(subsegment: undefined | Subsegment, middlewares, context, event, result, err) {
     endXRayTracing(subsegment);
     let finalResult = result;
-    for (let middleware of middlewares) {
+    let reversedMiddlewares = [...middlewares].reverse();
+    for (let middleware of reversedMiddlewares) {
         if (typeof middleware !== 'function' && middleware.teardown) {
             const teardownResult = await middleware.teardown(event, context, finalResult, err);
-            // Backwards compatibility:
-            // Applications that use previous versions of this framework may not be up to date
-            // and may treat the teardown logic as a function that returns void.
-            // in that case we just return the executionResult.
-            //
-            // Keep in mind that if the teardown logic willingly returns an undefined object we ignore that result
-            // and return the executionResult instead. Maybe that's what it deserves if it returns an undefined value.
+            // If the teardown logic returns void or an undefined object
+            // we ignore that result and return the executionResult instead.
             // null objects are perfectly fine though.
             if (teardownResult !== undefined) {
                 finalResult = teardownResult;
