@@ -1,6 +1,6 @@
 {
   "name": "povery",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "description": "Povery - a Lambda Framework",
   "scripts": {
     "test": "NODE_ENV=development jest",
