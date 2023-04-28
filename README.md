@@ -71,12 +71,15 @@ This is how to react to AWS events:
 
 ```typescript
 // index.ts
-import { povery, controller, api } from "povery";
+import { povery, controller, api, forAwsEvent } from "povery";
+
 async function handler(event, context) {
   // DO SOMETHING
 }
 
-exports.handler = povery.forAwsEvent.load(handler);
+exports.handler = povery
+    .use(forAwsEvent())
+    .load(handler);
 ```
 ## Middlewares
 
