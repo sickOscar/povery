@@ -93,7 +93,27 @@ function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequ
     ExecutionContext.set(`user`, {...claims})
 
     if (options?.roleClaim) {
-        ExecutionContext.set(`roles`, [claims[options.roleClaim]])
+
+        const roles = claims[options.roleClaim];
+
+        assert(roles, `Bootloader - No role claim found in ${options.roleClaim}`); 
+
+        if (Array.isArray(roles)) {
+            ExecutionContext.set(`roles`, roles)
+        } else {
+
+            let rolesArray;
+            try {
+                rolesArray = JSON.parse(roles);
+            } catch (e) {
+                console.log(roles, e);
+                rolesArray = roles.split(',')
+            }
+
+            ExecutionContext.set(`roles`, rolesArray || [])
+        }
+
+        // ExecutionContext.set(`roles`, [claims[options.roleClaim]])
     } else {
         if (typeof claims['cognito:groups'] === 'string') {
             ExecutionContext.set(`roles`, claims['cognito:groups'].split(',') || [])
