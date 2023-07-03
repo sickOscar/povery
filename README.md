@@ -2,6 +2,8 @@
 
 #### Povery is a framework for building things on AWS Lambda with Typescript.
 
+![workflow](https://github.com/sickOscar/povery/actions/workflows/main.yml/badge.svg)
+
 Check out [povery-cli](https://github.com/sickOscar/povery-cli) for a way to organize
 your application written with AWS Lambda.
 
