@@ -3,8 +3,8 @@
   "version": "0.0.32",
   "description": "Povery - a Lambda Framework",
   "scripts": {
-    "test": "NODE_ENV=development jest",
-    "test:dev": "NODE_ENV=development jest --watch",
+    "test": "NODE_ENV=development jest --silent=true --runInBand --detectOpenHandles",
+    "test:dev": "NODE_ENV=development jest --watch --runInBand",
     "build:dev": "rimraf ./dist && tsc --project tsconfig.build.json --watch",
     "build": "rimraf ./dist && tsc --project tsconfig.build.json"
   },
