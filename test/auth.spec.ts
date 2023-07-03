@@ -13,7 +13,7 @@ describe("runAuthorization", () => {
             }
         };
         const controller = {};
-        const newContext = await runAuthorization(context, event, controller);
+        const newContext = await runAuthorization(context, event, controller, {});
         expect(newContext).toBe(context);
     })
 
