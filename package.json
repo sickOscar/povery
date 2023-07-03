@@ -4,8 +4,9 @@
   "description": "Povery - a Lambda Framework",
   "scripts": {
     "test": "NODE_ENV=development jest",
-    "build-dev": "rimraf ./dist && tsc --project tsconfig.build.json --watch",
-    "build": "rimraf ./dist && tsc --project tsconfig.build.json --watch"
+    "test:dev": "NODE_ENV=development jest --watch",
+    "build:dev": "rimraf ./dist && tsc --project tsconfig.build.json --watch",
+    "build": "rimraf ./dist && tsc --project tsconfig.build.json"
   },
   "keywords": [
     "lambda",
