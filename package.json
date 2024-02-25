@@ -21,7 +21,7 @@
     "url": "git+https://github.com/sickOscar/povery.git"
   },
   "bugs": {
-      "url": "https://giuthub.com/sickOscar/povery/issues"
+    "url": "https://giuthub.com/sickOscar/povery/issues"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/jest": "^28.1.8",
     "@types/node": "^18.11.18",
+    "@typescript-eslint/parser": "^7.0.2",
     "jest": "^29.3.1",
     "prettier": "^2.7.1",
     "rimraf": "^4.4.1",

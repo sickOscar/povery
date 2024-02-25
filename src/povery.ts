@@ -130,11 +130,11 @@ async function teardown(subsegment: undefined | Subsegment, middlewares, context
 function logEnvironment(event) {
     console.log('Stage:', process.env.deploymentStage);
     console.log(`Node Environment: ${process.env.NODE_ENV}`);
-    if (event.httpMethod) {
-        console.log('Event:', filterPassword(JSON.stringify(event.body)));
-    } else {
-        console.log('Event:', filterPassword(JSON.stringify(event)));
-    }
+    // if (event.httpMethod?.toLowerCase() === 'post' || event.httpMethod?.toLowerCase() === 'put') {
+    //     console.log('Event:', filterPassword(JSON.stringify(event.body)));
+    // } else {
+    //     console.log('Event:', filterPassword(JSON.stringify(event)));
+    // }
 }
 
 export function runNewExecutionContext(fn, defaultContext: null | Map<string, any> = null) {

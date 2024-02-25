@@ -17,10 +17,19 @@ class DefaultQueryParamsOptions implements PathParamOptions {
 export function pathParam(options: PathParamOptions): any {
     const mergedOptions = {...new DefaultQueryParamsOptions(), ...options};
     return autowiredParam(allParamValues => {
-        const pathParameters = mergedOptions.transform
-            ? mergedOptions.transform(allParamValues[0].pathParameters)
-            : allParamValues[0].pathParameters;
+
+        // get path parameters from AWS event
+        // TODO: fix this because it's not working properly with {proxy+} path integration on local dev
+        let pathParameters = allParamValues[0].pathParameters;
+
+        // apply transform function if it exists
+        if (mergedOptions.transform) {
+            pathParameters = mergedOptions.transform(pathParameters);
+        }
+
+        // pathParameters is an object with key-value pairs in AWS Event
         const value = pathParameters ? pathParameters[options.name] : null;
+
         validateParam(mergedOptions.validators, options.name, value);
         return value;
     });
