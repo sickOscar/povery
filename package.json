@@ -1,6 +1,6 @@
 {
   "name": "povery",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "description": "Povery - a Lambda Framework",
   "scripts": {
     "test": "NODE_ENV=development jest --silent=true --runInBand --detectOpenHandles",
