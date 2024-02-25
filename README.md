@@ -333,6 +333,10 @@ Here's an example:
     ```
 ````
 
+### Validation
+
+Povery uses [class-validator](https://www.npmjs.com/package/class-validator) library to implement validation of parameters
+
 ## Typescript configuration
 
 Since povery makes heavy use of decorators, your `tsconfig.json` file should have the following compiler
