@@ -291,10 +291,12 @@ async function execFunctionHandler(controller, event, context): Promise<BaseHTTP
         // AWS HTTP APIs keeps stage name in path. We need to remove it to match the route
         const apiStage = event.requestContext?.stage;
         let apiPath = event.path;
+        console.log(`API Stage: ${apiStage}`);
         if (apiPath.startsWith(`/${apiStage}`)) {
+            console.log(`Removing stage from path`);
             apiPath = apiPath.replace(`/${apiStage}`, '');
         }
-        
+        console.log(`API Path: ${apiPath}`);
 
         const matchingRoute = getRoute(controller, event.httpMethod, apiPath);
         context.requestParams = matchingRoute.params;
