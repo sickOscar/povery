@@ -288,10 +288,15 @@ async function execFunctionHandler(controller, event, context): Promise<BaseHTTP
     } else {
         const instance = new controller();
 
-        // AWS HTTP APIs has a rawPath attribute, while REST APIs have a path attribute
-        const apiPath = event.path ? event.path : event.rawPath;
+        // AWS HTTP APIs keeps stage name in path. We need to remove it to match the route
+        const apiStage = event.requestContext?.stage;
+        let apiPath = event.path;
+        if (apiPath.startsWith(`/${apiStage}`)) {
+            apiPath = apiPath.replace(`/${apiStage}`, '');
+        }
+        
 
-        const matchingRoute = getRoute(controller, event.httpMethod, event.path);
+        const matchingRoute = getRoute(controller, event.httpMethod, apiPath);
         context.requestParams = matchingRoute.params;
 
         const startExecution = startTimer();
