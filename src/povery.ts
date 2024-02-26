@@ -128,13 +128,15 @@ async function teardown(subsegment: undefined | Subsegment, middlewares, context
 }
 
 function logEnvironment(event) {
-    console.log('Stage:', process.env.deploymentStage);
-    console.log(`Node Environment: ${process.env.NODE_ENV}`);
-    // if (event.httpMethod?.toLowerCase() === 'post' || event.httpMethod?.toLowerCase() === 'put') {
-    //     console.log('Event:', filterPassword(JSON.stringify(event.body)));
-    // } else {
-    //     console.log('Event:', filterPassword(JSON.stringify(event)));
-    // }
+    if (process.env.LOG_LEVEL === "DEBUG") {
+        console.log('Stage:', process.env.deploymentStage);
+        console.log(`Node Environment: ${process.env.NODE_ENV}`);
+        if (event.httpMethod?.toLowerCase() === 'post' || event.httpMethod?.toLowerCase() === 'put') {
+            console.log('Event:', filterPassword(JSON.stringify(event.body)));
+        } else {
+            console.log('Event:', filterPassword(JSON.stringify(event)));
+        }
+    }
 }
 
 export function runNewExecutionContext(fn, defaultContext: null | Map<string, any> = null) {
@@ -266,7 +268,9 @@ export function isRPC(event, context) {
 }
 
 async function execFunctionHandler(controller, event, context): Promise<BaseHTTPResponse> {
-    console.log(`HttpMethod`, event.httpMethod);
+    if (process.env.LOG_LEVEL === "DEBUG") {
+        console.log(`HttpMethod`, event.httpMethod);
+    }
 
     let result;
 
@@ -283,6 +287,9 @@ async function execFunctionHandler(controller, event, context): Promise<BaseHTTP
 
     } else {
         const instance = new controller();
+
+        // AWS HTTP APIs has a rawPath attribute, while REST APIs have a path attribute
+        const apiPath = event.path ? event.path : event.rawPath;
 
         const matchingRoute = getRoute(controller, event.httpMethod, event.path);
         context.requestParams = matchingRoute.params;

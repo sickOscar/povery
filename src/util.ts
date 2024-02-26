@@ -40,5 +40,7 @@ export const startTimer = () => process.hrtime();
 export const endTimer = (start, note) => {
     const precision = 3; // 3 decimal places
     const elapsed = process.hrtime(start)[1] / 1000000; // divide by a million to get nano to milli
-    console.log(process.hrtime(start)[0] + " s, " + elapsed.toFixed(precision) + " ms - " + note); // print message + time
+    if (process.env.LOG_LEVEL === "DEBUG") {
+        console.log(process.hrtime(start)[0] + " s, " + elapsed.toFixed(precision) + " ms - " + note); // print message + time
+    }
 }
