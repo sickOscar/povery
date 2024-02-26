@@ -337,6 +337,10 @@ Here's an example:
 
 Povery uses [class-validator](https://www.npmjs.com/package/class-validator) library to implement validation of parameters
 
+## Logging
+
+You can set the environment variable `LOG_LEVEL` to `DEBUG` to have more information on function execution. This will log the incoming event and more, so be careful with secrets and aws cloudwatch costs.
+
 ## Typescript configuration
 
 Since povery makes heavy use of decorators, your `tsconfig.json` file should have the following compiler
