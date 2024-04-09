@@ -1,0 +1,17 @@
+{
+  "name": "first-setup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+      "start": "povery-cli start"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "povery": "^0.0.37"
+  },
+  "devDependencies": {
+    "povery-cli": "^0.0.20"
+  }
+}

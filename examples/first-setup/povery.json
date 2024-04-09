@@ -1,0 +1,10 @@
+{
+    "lambdas": {
+        "API_Test": [
+            {
+                "method": "GET",
+                "path": "/test"
+            }
+        ]
+    }
+}
