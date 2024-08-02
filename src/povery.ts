@@ -41,6 +41,8 @@ poveryFn.load = function(controller): (event: any, context: any) => Promise<any>
                 executionResult = await handleExecutionError(e, event);
             } finally {
                 result = await teardown(xRaySegment, this.middlewares || [], context, event, executionResult, err);
+                // reset middlewares
+                this.middlewares = [];
                 endTimer(startTime, 'povery.load');
             }
             return result;
@@ -339,4 +341,3 @@ const filterPassword = (s) => {
 
 
 export const povery = poveryFn;
-
