@@ -1,0 +1,104 @@
+# Povery Project Context
+
+## Project Description
+Povery is a lightweight, decorator-based framework designed specifically for building serverless applications on AWS Lambda with TypeScript. It provides a structured approach to handling API Gateway requests, AWS events, and authentication/authorization flows.
+
+## Tech Stack
+- **Language**: TypeScript
+- **Runtime**: Node.js (>=18.0.0)
+- **Platform**: AWS Lambda
+- **Core Dependencies**:
+  - aws-lambda
+  - aws-xray-sdk
+  - class-transformer
+  - class-validator
+  - reflect-metadata
+  - path-to-regexp
+  - xss
+- **Testing Dependencies**:
+  - jest
+  - ts-jest
+
+## Architecture
+Povery follows a decorator-based middleware framework pattern with the following components:
+- **Controllers**: Classes that handle API Gateway requests
+- **Decorators**: TypeScript decorators for routing, validation, and authorization
+- **Middleware**: Intercept and process events before and after handler execution
+- **Authentication**: Integration with AWS Cognito
+- **Validation**: Parameter validation using class-validator
+
+## Key Features
+- Lambda-native approach to handling HTTP requests
+- Decorator-based controllers and routing
+- Parameter validation and type safety
+- Authentication and authorization with AWS Cognito
+- AWS X-Ray tracing integration
+- RPC-style invocations
+- AWS event handling
+
+## File Structure
+```
+src/
+├── main.ts                  # Entry point and exports
+├── povery.ts                # Core framework implementation
+├── auth.ts                  # Authentication and authorization
+├── models.ts                # Data models and interfaces
+├── util.ts                  # Utility functions
+├── execution_context.ts     # Execution context management
+├── povery_error.ts          # Error handling
+├── route_extractor.ts       # Route extraction utilities
+├── test_helpers.ts          # Testing utilities
+└── decorators/
+    ├── index.ts             # Decorator exports
+    ├── api.decorator.ts     # API endpoint decorator
+    ├── controller.decorator.ts # Controller class decorator
+    ├── acl.decorator.ts     # Access control list decorator
+    ├── body.decorator.ts    # Request body decorator
+    ├── path-param.decorator.ts # Path parameter decorator
+    ├── query-param.decorator.ts # Query parameter decorator
+    ├── query-params.decorator.ts # Multiple query parameters decorator
+    ├── autowired.decorator.ts # Dependency injection decorator
+    ├── autowired-param.decorator.ts # Parameter injection decorator
+    └── validation/
+        └── validation.ts    # Validation utilities
+
+test/
+├── povery.spec.ts           # Core framework tests
+├── auth.spec.ts             # Authentication tests
+├── concurrency.spec.ts      # Concurrency tests
+└── middleware-reset.spec.ts # Middleware reset tests
+
+examples/
+└── first-setup/             # Example Lambda project using Povery
+```
+
+## Usage
+- **Basic Example**: Create a controller class with @controller decorator, define routes with @api decorator, and export the handler using povery.load(Controller)
+- **Middleware**: Add middleware using povery.use(middleware)
+- **Authentication**: Use Authorizer middleware and @acl decorator for role-based access control
+- **Validation**: Use parameter decorators with validators for input validation
+
+## Code Flow
+The request handling flow in Povery follows these steps:
+1. AWS Lambda invokes the handler function
+2. Povery processes the event through middleware setup phase
+3. Route matching or RPC action resolution
+4. Parameter validation
+5. Controller method execution
+6. Response formatting
+7. Middleware teardown phase
+8. Return response to AWS Lambda
+
+## How It Works
+Povery uses TypeScript decorators to define controllers and API endpoints. When a request comes in through AWS Lambda, the framework:
+
+1. Processes the event through any registered middleware
+2. Matches the request to the appropriate controller method based on HTTP method and path
+3. Validates and transforms input parameters using decorators
+4. Executes the controller method
+5. Formats the response for API Gateway
+6. Processes the response through middleware teardown phase
+
+For RPC-style invocations, Povery looks for an "action" property in the event and calls the corresponding method on the controller.
+
+The framework also supports AWS event handling through the forAwsEvent middleware, which bypasses HTTP routing and directly passes events to handler functions. 
