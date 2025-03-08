@@ -22,7 +22,9 @@ const poveryFn:PoveryFn = function() {
 } as unknown as PoveryFn;
 
 poveryFn.load = function(controller): (event: any, context: any) => Promise<any> {
-
+    // Store middlewares at handler creation time
+    const handlerMiddlewares = [...(this.middlewares || [])];
+    
     // DO NOT SHORTEN
     return async (event: any, context: any) => {
         return runNewExecutionContext(async () => {
@@ -33,16 +35,18 @@ poveryFn.load = function(controller): (event: any, context: any) => Promise<any>
             let executionResult;
             let result;
             try {
-                xRaySegment = await setup(context, event, this.middlewares || []);
+                // Use the stored middlewares for each invocation
+                xRaySegment = await setup(context, event, handlerMiddlewares);
                 executionResult = await runFunction(event, context, controller);
             } catch (e: any) {
                 console.log(`err`, e)
                 err = e;
                 executionResult = await handleExecutionError(e, event);
             } finally {
-                result = await teardown(xRaySegment, this.middlewares || [], context, event, executionResult, err);
-                // reset middlewares
-                this.middlewares = [];
+                // Use the stored middlewares for teardown
+                result = await teardown(xRaySegment, handlerMiddlewares, context, event, executionResult, err);
+                // Reset middlewares for the povery instance
+                this.clean();
                 endTimer(startTime, 'povery.load');
             }
             return result;
@@ -57,10 +61,10 @@ poveryFn.clean = function() {
     this.awsEvent = false;
     // @ts-ignore
     this.middlewares = [];
+    return this;
 }
 
 poveryFn.use = function(middleware) {
-
     if (!this.middlewares) {
         // @ts-ignore
         this.middlewares = [];

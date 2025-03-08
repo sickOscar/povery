@@ -97,7 +97,7 @@ class RPCController {
     getUserData(payload) {
         const { userId } = payload;
         // Fetch and return user data
-        return { user: { id: userId, name: "Example User" } };
+        return { user: { id: userId, name: "Example    User" } };
     }
 }
 
