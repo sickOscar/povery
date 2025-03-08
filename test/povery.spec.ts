@@ -173,6 +173,56 @@ describe('povery', () => {
             });
         });
 
+        it('should handle paths that contain the stage name as part of a resource path', async () => {
+            @controller
+            class testController {
+                @api('GET', '/devices')
+                getDevices() {
+                    return {
+                        result: 'devices list'
+                    }
+                }
+            }
+
+            const httpEvent = {
+                httpMethod: 'GET',
+                path: '/dev/devices',
+                requestContext: {
+                    stage: 'dev'
+                }
+            };
+            const handler = povery.load(testController);
+            await expect(handler(httpEvent, {})).resolves.toMatchObject({
+                body: JSON.stringify({result: 'devices list'}),
+                statusCode: 200
+            });
+        });
+
+        it('should handle paths where stage name is not followed by a slash', async () => {
+            @controller
+            class testController {
+                @api('GET', '/devinfo')
+                getDevInfo() {
+                    return {
+                        result: 'dev info'
+                    }
+                }
+            }
+
+            const httpEvent = {
+                httpMethod: 'GET',
+                path: '/devinfo',
+                requestContext: {
+                    stage: 'dev'
+                }
+            };
+            const handler = povery.load(testController);
+            await expect(handler(httpEvent, {})).resolves.toMatchObject({
+                body: JSON.stringify({result: 'dev info'}),
+                statusCode: 200
+            });
+        });
+
         it('should return a 500 error if the controller method throws a generic error', async () => {
             @controller
             class testController {

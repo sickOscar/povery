@@ -188,6 +188,23 @@ exports.handler = povery
   .load(Controller);
 ```
 
+## API Stage Handling
+
+When using AWS HTTP APIs, the stage name is included in the path. Povery automatically handles this by removing the stage prefix from the path before matching routes:
+
+```
+// Example:
+// API Stage: dev
+// Original path: /dev/users
+// Path used for route matching: /users
+```
+
+This ensures that your route definitions don't need to include the stage name. The stage removal is only applied when:
+1. The request includes a stage name in the `requestContext.stage` property
+2. The path starts with the stage name followed by a slash (`/{stage}/...`)
+
+This prevents issues with paths that might contain the stage name as part of a resource path (e.g., `/dev/devices` when the stage is `dev`).
+
 ## Request Parameters
 
 Povery provides several decorators to handle and validate request parameters:

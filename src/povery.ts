@@ -298,9 +298,9 @@ async function execFunctionHandler(controller, event, context): Promise<BaseHTTP
         const apiStage = event.requestContext?.stage;
         let apiPath = event.path;
         console.log(`API Stage: ${apiStage}`);
-        if (apiPath.startsWith(`/${apiStage}`)) {
+        if (apiStage && apiPath.startsWith(`/${apiStage}/`)) {
             console.log(`Removing stage from path`);
-            apiPath = apiPath.replace(`/${apiStage}`, '');
+            apiPath = apiPath.substring(apiStage.length + 1);
         }
         console.log(`API Path: ${apiPath}`);
 
