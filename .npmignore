@@ -15,6 +15,9 @@
 .tmp
 .build
 
+# Examples directory - not included in the published package
+examples/
+
 # Logs
 logs
 *.log
