@@ -1,0 +1,14 @@
+{
+    "lambdas": {
+        "ProductAPI": [
+            {
+                "method": "GET",
+                "path": "/products"
+            },
+            {
+                "method": "GET",
+                "path": "/products/:id"
+            }
+        ]
+    }
+} 

@@ -1,0 +1,24 @@
+{
+  "name": "database-example",
+  "version": "1.0.0",
+  "description": "Povery database connection example following AWS Lambda best practices",
+  "main": "index.js",
+  "scripts": {
+    "start": "povery-cli start"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "povery": "^0.0.40",
+    "pg": "^8.11.3",
+    "@aws-sdk/client-secrets-manager": "^3.470.0",
+    "class-validator": "^0.14.0",
+    "class-transformer": "^0.5.1"
+  },
+  "devDependencies": {
+    "povery-cli": "^0.0.20",
+    "@types/node": "^18.0.0",
+    "@types/pg": "^8.10.9",
+    "typescript": "^4.9.5"
+  }
+} 

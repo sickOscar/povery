@@ -1,0 +1,20 @@
+{
+  "name": "auth-example",
+  "version": "1.0.0",
+  "description": "Povery authentication example with AWS Cognito",
+  "main": "index.js",
+  "scripts": {
+    "start": "povery-cli start"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "povery": "^0.0.40",
+    "@aws-sdk/client-cognito-identity-provider": "^3.470.0"
+  },
+  "devDependencies": {
+    "povery-cli": "^0.0.20",
+    "@types/node": "^18.0.0",
+    "typescript": "^4.9.5"
+  }
+} 

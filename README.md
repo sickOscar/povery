@@ -8,6 +8,39 @@ Povery is a lightweight, decorator-based framework designed specifically for bui
 
 Check out [povery-cli](https://github.com/sickOscar/povery-cli) for organizing applications built with Povery.
 
+## Table of Contents
+
+- [Why Povery?](#why-povery)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [API Gateway Integration](#api-gateway-integration)
+  - [AWS Event Handling](#aws-event-handling)
+  - [RPC Functionality](#rpc-functionality)
+- [Middleware System](#middleware-system)
+- [Authentication & Authorization](#authentication--authorization)
+- [API Stage Handling](#api-stage-handling)
+- [Request Parameters](#request-parameters)
+  - [Path Parameters](#path-parameters)
+  - [Request Body](#request-body)
+  - [Query Parameters](#query-parameters)
+  - [Custom Parameters](#custom-parameters)
+- [Validation](#validation)
+  - [Validation with Parameter Decorators](#validation-with-parameter-decorators)
+  - [DTO Validation](#dto-validation)
+  - [Validation Error Handling](#validation-error-handling)
+  - [Custom Validation](#custom-validation)
+  - [Validation Best Practices](#validation-best-practices)
+- [Examples](#examples)
+  - [Basic Setup](#basic-setup)
+  - [Authentication with Cognito](#authentication-with-cognito)
+  - [Database Integration](#database-integration)
+  - [Lambda Layers](#lambda-layers)
+- [Logging](#logging)
+- [TypeScript Configuration](#typescript-configuration)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Why Povery?
 
 AWS Lambda operates fundamentally differently from traditional web servers. While many developers attempt to use Express.js with Lambda, this approach introduces [several](https://www.quora.com/Should-you-use-Express-js-with-AWS-Lambda) [significant](https://stackoverflow.com/questions/64457577/should-i-be-using-express-js-in-a-serverless-app) [issues](https://medium.com/dailyjs/six-reasons-why-you-shouldnt-run-express-js-inside-aws-lambda-102e3a50f355).
@@ -436,6 +469,160 @@ export class UserDto {
 6. **Separate validation from business logic**: Keep validation in DTOs and decorators
 
 By leveraging Povery's validation system, you can ensure that your Lambda functions only process valid data, reducing bugs and improving security.
+
+## Examples
+
+The `examples` directory contains several sample projects demonstrating how to use Povery in different scenarios:
+
+### Basic Setup
+
+A simple example showing how to set up a basic API with Povery.
+
+```typescript
+import { povery, controller, api } from 'povery'
+
+@controller
+class Controller {
+    @api('GET', '/test')
+    sayHello() {
+        return `We're povery!`
+    }
+}
+
+exports.handler = povery.load(Controller);
+```
+
+This example demonstrates:
+- Basic controller setup
+- API endpoint definition
+- Lambda handler export
+
+### Authentication with Cognito
+
+Demonstrates how to implement authentication and authorization using AWS Cognito.
+
+```typescript
+import { povery, controller, api, acl, Authorizer, Auth } from 'povery';
+
+@controller
+class AuthController {
+    @api('GET', '/profile')
+    @acl(['USER', 'ADMIN'])
+    getUserProfile() {
+        const user = Auth.getUser();
+        const roles = Auth.getRoles();
+        
+        return {
+            message: 'You are authenticated!',
+            user: {
+                username: user.username,
+                email: user.email
+            },
+            roles: roles
+        };
+    }
+    
+    @api('GET', '/admin')
+    @acl(['ADMIN'])
+    getAdminDashboard() {
+        return {
+            message: 'Welcome to the admin dashboard!',
+            secretData: 'This is only visible to admins'
+        };
+    }
+}
+
+exports.handler = povery
+    .use(Authorizer(AuthController))
+    .load(AuthController);
+```
+
+This example demonstrates:
+- AWS Cognito integration
+- Role-based access control
+- Protected endpoints
+
+### Database Integration
+
+Shows how to implement database connections following AWS Lambda best practices.
+
+```typescript
+import { povery, controller, api, body, pathParam } from 'povery';
+import { executeQuery } from './db';
+import { User, CreateUserDto } from './models';
+
+@controller
+class UserController {
+    @api('GET', '/users')
+    async getUsers() {
+        try {
+            const users = await executeQuery<User>('SELECT * FROM users LIMIT 100');
+            return { users };
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            throw new PoveryError('Failed to fetch users', 500);
+        }
+    }
+    
+    @api('POST', '/users')
+    async createUser(
+        event: any,
+        context: any,
+        @body({
+            transform: (event: any) => CreateUserDto.fromObject(JSON.parse(event.body)),
+            validate: true
+        }) userDto: CreateUserDto
+    ) {
+        // Implementation...
+    }
+}
+
+exports.handler = povery.load(UserController);
+```
+
+This example demonstrates:
+- PostgreSQL connection pooling and reuse
+- Secure credential management with AWS Secrets Manager
+- Parameter validation with DTOs
+- Error handling
+
+### Lambda Layers
+
+Demonstrates how to use AWS Lambda Layers for sharing code across multiple functions.
+
+```typescript
+// In Lambda function:
+import { povery, controller, api, pathParam } from 'povery';
+import { productService, GetProductDto } from '/opt/nodejs';
+
+@controller
+class ProductController {
+    @api('GET', '/products')
+    async getProducts() {
+        const products = await productService.getAllProducts();
+        return { products };
+    }
+    
+    @api('GET', '/products/:id')
+    async getProductById(
+        event: any,
+        context: any,
+        @pathParam({ name: 'id', validators: [] }) id: string
+    ) {
+        // Implementation...
+    }
+}
+
+exports.handler = povery.load(ProductController);
+```
+
+This example demonstrates:
+- Shared models and services in a Lambda Layer
+- PostgreSQL database service in a shared layer
+- Code reuse across functions
+- Reduced bundle size
+
+For more detailed examples, check out the [examples directory](https://github.com/sickOscar/povery/tree/master/examples) in the repository.
 
 ## Logging
 

@@ -1,0 +1,21 @@
+{
+  "name": "layers-example",
+  "version": "1.0.0",
+  "description": "Povery example with AWS Lambda Layers for shared code",
+  "main": "index.js",
+  "scripts": {
+    "start": "povery-cli start",
+    "build:layers": "cd layers/common && npm install && cd ../../"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "povery": "^0.0.40",
+    "@aws-sdk/client-secrets-manager": "^3.470.0"
+  },
+  "devDependencies": {
+    "povery-cli": "^0.0.20",
+    "@types/node": "^18.0.0",
+    "typescript": "^4.9.5"
+  }
+} 
