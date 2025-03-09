@@ -130,5 +130,15 @@ export const Auth = {
     },
     getRoles: function (): string[] {
         return ExecutionContext.get('roles');
+    },
+    getAttribute: function(attributeName: string): any {
+        return ExecutionContext.get('user')?.[attributeName];
+    },
+    setAttribute: function(attributeName:string, value:any): void {
+        const user = ExecutionContext.get('user');
+        if (!user) {
+            throw new PoveryError("Unable to set attribute on user", 500);
+        } 
+        user[attributeName] = value;
     }
 }

@@ -431,6 +431,48 @@ describe("Auth utility", () => {
         const roles = Auth.getRoles();
         expect(roles).toEqual(mockRoles);
     });
+
+    it("should get attribute from user", () => {
+        const mockUser = { sub: "123", username: "testuser", email: "test@example.com" };
+        
+        // Mock ExecutionContext.get
+        jest.spyOn(ExecutionContext, 'get').mockImplementation((key) => {
+            if (key === 'user') return mockUser;
+            return null;
+        });
+
+        const email = Auth.getAttribute('email');
+        expect(email).toEqual("test@example.com");
+    });
+
+    it("should return undefined when getting attribute from non-existent user", () => {
+        // Mock ExecutionContext.get to return null for user
+        jest.spyOn(ExecutionContext, 'get').mockImplementation((key) => null);
+
+        const attribute = Auth.getAttribute('email');
+        expect(attribute).toBeUndefined();
+    });
+
+    it("should set attribute on user", () => {
+        const mockUser: any = { sub: "123", username: "testuser" };
+        
+        // Mock ExecutionContext.get
+        jest.spyOn(ExecutionContext, 'get').mockImplementation((key) => {
+            if (key === 'user') return mockUser;
+            return null;
+        });
+
+        Auth.setAttribute('email', 'test@example.com');
+        expect(mockUser.email).toEqual('test@example.com');
+    });
+
+    it("should throw error when setting attribute on non-existent user", () => {
+        // Mock ExecutionContext.get to return null for user
+        jest.spyOn(ExecutionContext, 'get').mockImplementation((key) => null);
+
+        expect(() => Auth.setAttribute('email', 'test@example.com'))
+            .toThrow(new PoveryError("Unable to set attribute on user", 500));
+    });
 });
 
 describe("authMiddleware", () => {
