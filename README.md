@@ -258,6 +258,25 @@ async getUserById(
 }
 ```
 
+You can also transform path parameters to different types using the `transform` option:
+
+```typescript
+@api('GET', '/products/:id')
+async getProduct(
+    event: any,
+    context: any,
+    @pathParam({
+        name: 'id',
+        transform: (val) => parseInt(val, 10)
+    }) id: number
+) {
+    // id is now a number, not a string
+    return productService.findById(id);
+}
+```
+
+The transform function is applied to the specific parameter value, allowing you to convert strings from the URL path to appropriate types like numbers, booleans, or custom objects.
+
 ### Request Body
 
 The `@body` decorator is used to validate and transform the request body. It supports automatic type conversion and validation:
