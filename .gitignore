@@ -146,3 +146,6 @@ out
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Security requirements document
+security_requirements.md

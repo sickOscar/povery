@@ -239,7 +239,8 @@ describe('povery', () => {
             const handler = povery.load(testController)
             await expect(handler(httpEvent, {})).resolves.toStrictEqual({
                 body: JSON.stringify({
-                        errorMessage: 'test'
+                        errorMessage: 'test',
+                        errorCode: 'INTERNAL_ERROR'
                     },
                 ),
                 headers: {
@@ -268,7 +269,8 @@ describe('povery', () => {
             const handler = povery.load(testController)
             await expect(handler(httpEvent, {})).resolves.toStrictEqual({
                 body: JSON.stringify({
-                        errorMessage: 'test'
+                        errorMessage: 'test',
+                        errorCode: 'INTERNAL_ERROR'
                     },
                 ),
                 headers: {
@@ -298,6 +300,7 @@ describe('povery', () => {
             await expect(handler(httpEvent, {})).resolves.toMatchObject({
                 body: JSON.stringify({
                     errorMessage: 'test',
+                    errorCode: 'INTERNAL_ERROR',
                     errorData: { field: 'username', reason: 'required' }
                 }),
                 statusCode: 400
@@ -329,7 +332,8 @@ describe('povery', () => {
                 const handler = povery.use(Authorizer(testController)).load(testController)
                 await expect(handler(httpEvent, {})).resolves.toStrictEqual({
                     body: JSON.stringify({
-                        errorMessage: 'Unauthorized access (REST)'
+                        errorMessage: 'Unauthorized access (REST)',
+                        errorCode: 'INTERNAL_ERROR'
                     }),
                     headers: {
                         'Access-Control-Allow-Origin': '*',

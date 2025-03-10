@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import xss from 'xss';
 import {ExecutionContext} from './execution_context';
 import * as util from './util';
-import {endTimer, endXRayTracing, startTimer, startXRayTracing} from './util';
+import {endTimer, endXRayTracing, maskSensitiveData, safeJsonParse, secureErrorHandler, startTimer, startXRayTracing} from './util';
 import assert from "assert";
 import {BaseHTTPResponse, ErrorContent, PoveryMiddleware} from "./models";
 import {getRoute} from "./route_extractor";
@@ -83,18 +83,18 @@ export function forAwsEvent<EventType>() {
 }
 
 async function handleExecutionError(err: any, event): Promise<BaseHTTPResponse | ErrorContent> {
-    logError(err);
-    const cleanedError = cleanError(err);
+    // Use the secureErrorHandler to get a sanitized error response
+    const securedError = secureErrorHandler(err);
 
     if (!event.httpMethod) {
-        return cleanedError;
+        return securedError;
     }
 
     return {
         headers: generateCorsHeaders(),
         isBase64Encoded: false,
         statusCode: err.statusCode || 500,
-        body: JSON.stringify(cleanedError),
+        body: JSON.stringify(securedError),
     };
 }
 
@@ -138,9 +138,9 @@ function logEnvironment(event) {
         console.log('Stage:', process.env.deploymentStage);
         console.log(`Node Environment: ${process.env.NODE_ENV}`);
         if (event.httpMethod?.toLowerCase() === 'post' || event.httpMethod?.toLowerCase() === 'put') {
-            console.log('Event:', filterPassword(JSON.stringify(event.body)));
+            console.log('Event:', maskSensitiveData(event.body));
         } else {
-            console.log('Event:', filterPassword(JSON.stringify(event)));
+            console.log('Event:', maskSensitiveData(event));
         }
     }
 }
@@ -155,25 +155,39 @@ export function runNewExecutionContext(fn, defaultContext: null | Map<string, an
 }
 
 function checkXss(event) {
-    const parsedEvent = JSON.parse(JSON.stringify(event));
+    const parsedEvent = safeJsonParse(JSON.stringify(event), event);
 
     if (_.isNil(parsedEvent.payload)) {
         return parsedEvent;
     }
 
-    let securedPayload = {};
-    // check for xss
-    Object.entries(parsedEvent.payload).forEach(([key, value]) => {
-        const newKey = xss(key);
-        let newValue = value;
-        if (typeof value === 'string') {
-            newValue = xss(value);
-        }
-        securedPayload[newKey] = newValue;
-    });
-    parsedEvent.payload = securedPayload;
+    // Apply recursive XSS sanitization to the payload
+    parsedEvent.payload = recursiveXssSanitize(parsedEvent.payload);
 
     return parsedEvent;
+}
+
+/**
+ * Recursively sanitizes an object or array to prevent XSS attacks
+ * @param obj The object or array to sanitize
+ * @returns A sanitized copy of the input
+ */
+export function recursiveXssSanitize(obj) {
+    if (typeof obj !== 'object' || obj === null) {
+        return typeof obj === 'string' ? xss(obj) : obj;
+    }
+    
+    if (Array.isArray(obj)) {
+        return obj.map(item => recursiveXssSanitize(item));
+    }
+    
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+        const sanitizedKey = xss(key);
+        result[sanitizedKey] = recursiveXssSanitize(value);
+    }
+    
+    return result;
 }
 
 function applyControllerValidator(controller, event) {
@@ -234,24 +248,14 @@ function runFunction(event, context, controller): Promise<any> {
 }
 
 function logError(err: any) {
-    console.log(err && err.stack ? err.stack : err);
+    // This function is now handled by secureErrorHandler
+    // We'll keep it for backward compatibility but use maskSensitiveData
+    console.log(maskSensitiveData(err && err.stack ? err.stack : err));
 }
 
 function cleanError(err: any): ErrorContent {
-    let error = err;
-    if (err.message) {
-        error = err.message;
-    }
-
-    if (util.isProduction()) {
-        error = 'Internal server error';
-    }
-
-    return {
-        errorMessage: error,
-        errorData: err.errorData ? err.errorData : undefined,
-    };
-
+    // Use secureErrorHandler for consistent error handling
+    return secureErrorHandler(err);
 }
 
 function getRPCActionAndPayload(event) {
@@ -259,9 +263,17 @@ function getRPCActionAndPayload(event) {
     let payload: any;
 
     try {
-        ({action, payload} = JSON.parse(event.body));
+        if (event.body) {
+            const parsedBody = safeJsonParse(event.body, {});
+            action = parsedBody.action;
+            payload = parsedBody.payload;
+        } else {
+            action = event.action;
+            payload = event.payload;
+        }
     } catch (err) {
-        ({action, payload} = event);
+        action = event.action;
+        payload = event.payload;
     }
     return {action, payload};
 }
@@ -335,13 +347,5 @@ function generateCorsHeaders() {
 function isAwsEvent(context) {
     return context.isAwsEvent;
 }
-
-const filterPassword = (s) => {
-    if (!s) return '';
-    return s.replace(/"password":"(.*?)"/, function (_a, _b) {
-        return '"password"="__PSW__"';
-    });
-};
-
 
 export const povery = poveryFn;

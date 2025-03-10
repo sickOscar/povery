@@ -20,15 +20,15 @@ export function pathParam(options: PathParamOptions): any {
 
         // get path parameters from AWS event
         // TODO: fix this because it's not working properly with {proxy+} path integration on local dev
-        let pathParameters = allParamValues[0].pathParameters;
-
-        // apply transform function if it exists
-        if (mergedOptions.transform) {
-            pathParameters = mergedOptions.transform(pathParameters);
-        }
+        const pathParameters = allParamValues[0].pathParameters || {};
 
         // pathParameters is an object with key-value pairs in AWS Event
-        const value = pathParameters ? pathParameters[options.name] : null;
+        let value = pathParameters[options.name] || null;
+
+        // apply transform function if it exists to the specific parameter value
+        if (mergedOptions.transform && value !== null && value !== undefined) {
+            value = mergedOptions.transform(value);
+        }
 
         validateParam(mergedOptions.validators, options.name, value);
         return value;

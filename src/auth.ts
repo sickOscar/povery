@@ -1,6 +1,6 @@
 import {ExecutionContext} from "./execution_context";
 import assert from "assert";
-import {endTimer, endXRayTracing, startTimer, startXRayTracing} from "./util";
+import {endTimer, endXRayTracing, safeJsonParse, startTimer, startXRayTracing} from "./util";
 import {isRPC} from "./povery";
 import {PoveryError} from "./povery_error";
 import {APIGatewayEventRequestContextWithAuthorizer} from "aws-lambda";
@@ -101,10 +101,9 @@ function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequ
         if (Array.isArray(roles)) {
             ExecutionContext.set(`roles`, roles)
         } else {
-
             let rolesArray;
             try {
-                rolesArray = JSON.parse(roles);
+                rolesArray = safeJsonParse(roles, roles.split(','));
             } catch (e) {
                 console.log(roles, e);
                 rolesArray = roles.split(',')
