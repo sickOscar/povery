@@ -105,9 +105,9 @@ function loadCognitoIdentityInRequestContext(requestContext: APIGatewayEventRequ
             try {
                 rolesArray = safeJsonParse(roles, roles.split(','));
             } catch (e) {
-                //console.log(roles, e);
                 rolesArray = roles.split(',')
             }
+            console.debug("User roles", rolesArray);
 
             ExecutionContext.set(`roles`, rolesArray || [])
         }

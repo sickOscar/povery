@@ -57,7 +57,7 @@ export function safeJsonParse(jsonString: string | null | undefined, defaultValu
         const parsed = JSON.parse(jsonString);
         return parsed || defaultValue;
     } catch (err) {
-        console.error('JSON parsing error:', err);
+        //console.error('JSON parsing error:', err);
         return defaultValue;
     }
 }
