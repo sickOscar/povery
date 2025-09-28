@@ -7,7 +7,7 @@ describe('Path Parameter from Query Parameters Issue', () => {
     povery.clean();
   });
 
-  it('should demonstrate the issue with path parameters being overridden by query parameters', async () => {
+  it('should prioritize pathParameters over query parameters when both exist', async () => {
     @controller
     class TestController {
       @api('GET', '/users/:id')
@@ -42,8 +42,7 @@ describe('Path Parameter from Query Parameters Issue', () => {
     const body1 = JSON.parse(result1.body);
     expect(body1.id).toBe('123');
 
-    // Test 2: Path parameter with query parameter of same name
-    // This might show the issue where query parameter overrides path parameter
+    // Test 2: Path parameter with query parameter of same name - should prioritize pathParameters
     const result2 = await handler({
       httpMethod: 'GET',
       path: '/users/123',
@@ -51,7 +50,7 @@ describe('Path Parameter from Query Parameters Issue', () => {
         id: '123'
       },
       queryStringParameters: {
-        id: '456' // Different value in query param
+        id: '456' // Different value in query param - should be ignored
       },
       requestContext: {
         stage: ''
@@ -61,13 +60,11 @@ describe('Path Parameter from Query Parameters Issue', () => {
     expect(result2.statusCode).toBe(200);
     const body2 = JSON.parse(result2.body);
     
-    // This should be '123' from the path, not '456' from query
-    console.log('Path param result:', body2.id);
-    console.log('Full body2:', body2);
+    // This should be '123' from pathParameters, not '456' from query
     expect(body2.id).toBe('123'); // Should be path param, not query param
   });
 
-  it('should demonstrate potential issue with missing pathParameters', async () => {
+  it('should fallback to context.requestParams when pathParameters is missing', async () => {
     @controller
     class TestController {
       @api('GET', '/users/:id')
@@ -91,7 +88,7 @@ describe('Path Parameter from Query Parameters Issue', () => {
       path: '/users/123',
       pathParameters: null, // This might happen in some AWS configurations
       queryStringParameters: {
-        id: '456'
+        id: '456' // Should be ignored - we extract from URL path matching
       },
       requestContext: {
         stage: ''
@@ -101,8 +98,83 @@ describe('Path Parameter from Query Parameters Issue', () => {
     expect(result.statusCode).toBe(200);
     const body = JSON.parse(result.body);
     
-    // The path param should still be extracted from the URL path matching
-    // But if the implementation is buggy, it might return null or take from query
-    console.log('Missing pathParameters result:', body.id);
+    // The path param should be extracted from the URL path matching, not query params
+    expect(body.id).toBe('123'); // Should be from path, not query
+  });
+
+  it('should work with transformed path parameters using fallback', async () => {
+    @controller
+    class TestController {
+      @api('GET', '/products/:id')
+      async getProduct(
+        event: APIGatewayEvent,
+        context: Context,
+        @pathParam({
+          name: 'id',
+          transform: (val) => parseInt(val, 10)
+        }) id: number
+      ) {
+        return {
+          message: `Product ID: ${id}`,
+          id: id,
+          type: typeof id
+        };
+      }
+    }
+
+    const handler = povery.load(TestController);
+
+    // Test with missing pathParameters but should extract from URL and transform
+    const result = await handler({
+      httpMethod: 'GET',
+      path: '/products/42',
+      pathParameters: null, // Missing
+      queryStringParameters: null,
+      requestContext: {
+        stage: ''
+      }
+    } as any, {} as Context);
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    
+    // Should extract '42' from URL and transform to number
+    expect(body.id).toBe(42);
+    expect(body.type).toBe('number');
+  });
+
+  it('should return null when parameter is not found anywhere', async () => {
+    @controller
+    class TestController {
+      @api('GET', '/users/:userId') // Note: different param name
+      async getUser(
+        event: APIGatewayEvent,
+        context: Context,
+        @pathParam({name: 'id'}) id: string // Looking for 'id' but path has 'userId'
+      ) {
+        return {
+          message: `User ID: ${id}`,
+          id: id
+        };
+      }
+    }
+
+    const handler = povery.load(TestController);
+
+    const result = await handler({
+      httpMethod: 'GET',
+      path: '/users/123',
+      pathParameters: null,
+      queryStringParameters: null,
+      requestContext: {
+        stage: ''
+      }
+    } as any, {} as Context);
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    
+    // Should be null since 'id' is not found (path has 'userId')
+    expect(body.id).toBeNull();
   });
 });

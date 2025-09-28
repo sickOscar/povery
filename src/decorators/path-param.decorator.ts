@@ -19,11 +19,14 @@ export function pathParam(options: PathParamOptions): any {
     return autowiredParam(allParamValues => {
 
         // get path parameters from AWS event
-        // TODO: fix this because it's not working properly with {proxy+} path integration on local dev
         const pathParameters = allParamValues[0].pathParameters || {};
+        
+        // get path parameters from route matching as fallback (context.requestParams)
+        const contextParams = allParamValues[1]?.requestParams || {};
 
         // pathParameters is an object with key-value pairs in AWS Event
-        let value = pathParameters[options.name] || null;
+        // If not available in AWS event, fall back to the parsed parameters from route matching
+        let value = pathParameters[options.name] || contextParams[options.name] || null;
 
         // apply transform function if it exists to the specific parameter value
         if (mergedOptions.transform && value !== null && value !== undefined) {
